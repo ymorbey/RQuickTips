@@ -1,0 +1,61 @@
+# Dates and times
+
+Load libraries.
+
+```{r, warning=FALSE, message=FALSE}
+library(dplyr)      # for data manipulation
+library(lubridate)  # for date and time functions
+```
+
+Here are some useful date and time functions. When using strptime, you will have to specify the date and time components. For help on the formats available, run ?strptime.
+
+```{r}
+
+# get current system date
+Sys.Date() 
+
+# get current system datetime, with the time zone
+Sys.time()
+
+# convert a character datetime to POSIXct
+# specify the components of the datetime when using strptime
+
+x <- "2024/11/15 12:00:00"
+( z <- as.POSIXct(strptime(x, "%Y/%m/%d %H:%M:%S")) ) 
+
+class(z) # note the formats of z
+
+```
+
+Adding date and time variables to a data frame is easy using lubridate functions. When calculating time differences, it is best to use the difftime function rather than straight subtraction.
+
+```{r}
+# first, let's make an example data frame (test) with a date variable formats
+
+today <- as.POSIXct(Sys.time())
+
+test <- data.frame(date=seq(today,today+5*60,60)) 
+
+class(test$date) # note the format
+
+glimpse(test) # glimpse the data frame as a tibble
+
+
+# now let's use lubridate functions to extract date & time components
+
+test1 <- test %>%
+  mutate(year = year(date),
+         yday = yday(date),
+         month = month(date),
+         day = day(date),
+         hour=hour(date),
+         min=minute(date),
+         sec=second(date),
+         tomorrow=date+days(1)) %>%
+  mutate(difftime = difftime(tomorrow,date,units="hours"),
+         difftime_h = as.numeric(difftime))
+
+test1
+
+```
+

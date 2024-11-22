@@ -1,0 +1,128 @@
+# Sun event times
+
+Load libraries
+
+```{r, warning=FALSE, message=FALSE}
+
+library(dplyr)      # for data frame manipulation
+library(suntools)   # for sunriset, crepuscule
+library(lubridate)  # for date and time functions
+library(data.table) # for setDT
+
+```
+
+Functions in suntools provide everthing you need to get sunrise, sunset, and other sun event times. One caveat is that these functions do not seem to perform well in dplyr. Therefore, we will 1) create a new variable using the assignment operator and 2) add the data table format to our data frame and then perform manipulations on the data table. 
+
+It's useful to look at an example before attempting these functions on your own data frame.
+
+```{r}
+
+# see example for sunriset
+
+example(sunriset)
+
+```
+
+Now let's try suntools functions on a data frame. Be very careful with your time zones! 
+
+```{r}
+
+# make example data frame (df) with dates, lat, and lon
+( today <- Sys.Date() ) # get today's date in UTC
+
+# create a data frame with dates, and convert time to tz
+df <- data.frame(date=as.POSIXct(seq(today,today+10,by=1),tz="EST"),
+                 lat=42,
+                 lon=-80)
+
+# put lat and lon into a matrix
+coords <- matrix(c(df$lon,df$lat),nrow=nrow(df))
+
+# get sunrise in tz of df$date
+# here we are using the assignment operator, not dplyr functions
+df$sunrise <- sunriset(
+  coords,
+  df$date,
+  direction = c("sunrise"),
+  POSIXct.out = TRUE
+)$time
+
+# confirm that the tz is correct
+df$sunrise[1:6]
+
+
+# get sunset in tz of df$date
+df$sunset <- sunriset(
+  coords,
+  df$date,
+  direction = c("sunset"),
+  POSIXct.out = TRUE
+)$time
+df$sunset[1:6]
+
+```
+
+As an alternative, we can add a data table format to the data frame and then use data table (dt) syntax for data manipulations. dt syntax works faster on large data sets.
+
+
+```{r}
+
+# add dt format to the data frame & check
+setDT(df)
+class(df)
+
+# sunset in tz of df$date
+df[,sunrise1 := sunriset(matrix(c(lon, lat),
+                                        ncol = 2, byrow = FALSE), date,
+                                 POSIXct.out=T,
+                                 direction='sunrise')[2]][]
+# sunset in tz of df$date
+df[,sunset1 := sunriset(matrix(c(lon, lat),
+                                ncol = 2, byrow = FALSE), date,
+                         POSIXct.out=T, direction='sunset')[2]][]
+
+# confirm these are correct
+df$sunrise1[1:6]
+df$sunset1[1:6]
+
+```
+
+Now let's get crepuscular times:
+
+- civil twilight: sun is 6 degrees below horizon
+- nautical twilight: sun is 12 degrees below horizon
+- astonomical twilight: sun is 18 degrees below horizon
+
+```{r}
+
+# astronomical twilight at dawn
+
+df$dawn = crepuscule(
+  coords,
+  df$date,
+  solarDep=18,
+  direction = c("dawn"),
+  POSIXct.out = TRUE
+)$time
+
+# astronomical twilight at dusk
+df$dusk = crepuscule(
+  coords,
+  df$date,
+  solarDep=18,
+  direction = c("dusk"),
+  POSIXct.out = TRUE
+)$time
+
+df$dawn[1:6] # confirm tz
+df$dusk[1:6]
+
+# keep variables of interest and view
+df1 <- df %>%
+  select(date,lat,lon,sunrise,sunset,dawn,dusk)
+
+head(df1)
+
+```
+
+

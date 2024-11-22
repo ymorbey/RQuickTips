@@ -1,9 +1,9 @@
 --- 
-title: "YOUR TITLE HERE"
-author: "YOUR NAME HERE"
+title: "Quick R Tips & Tricks"
+author: "Yolanda Morbey"
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 ---
 
-# Down the rabbit-hole
+This book is intended to show some simple tips and tricks to deal with common data issues encountered by beginners. 
 
