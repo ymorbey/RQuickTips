@@ -5,5 +5,7 @@ date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 ---
 
+# Preface
+
 This book is intended to show some simple tips and tricks to deal with common data issues encountered by beginners. 
 
