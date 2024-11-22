@@ -165,7 +165,64 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
             <section class="normal" id="section-">
 <div id="maps" class="section level1 hasAnchor" number="4">
 <h1><span class="header-section-number">Chapter 4</span> Maps<a href="maps.html#maps" class="anchor-section" aria-label="Anchor link to header"></a></h1>
-<p>This is a placeholder for material to come.</p>
+<p>This chapter shows how to create a basic map of a study area in the Laurentian Great Lakes region. The map will also include the Great Lakes shoreline from a shapefile I had previously acquired (and now hard to find).</p>
+<p>Load libraries</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="maps.html#cb41-1" tabindex="-1"></a><span class="fu">library</span>(ggmap)</span>
+<span id="cb41-2"><a href="maps.html#cb41-2" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb41-3"><a href="maps.html#cb41-3" tabindex="-1"></a><span class="fu">library</span>(sf)  <span class="co"># needed for st_transform</span></span></code></pre></div>
+<p>The first step is to get a stadiamap API key (see <a href="https://docs.stadiamaps.com/authentication/)" class="uri">https://docs.stadiamaps.com/authentication/)</a>. My recommendation is to save this key in an R script call stadiakey.R with the following code:</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="maps.html#cb42-1" tabindex="-1"></a><span class="co"># stadiamaps API key</span></span>
+<span id="cb42-2"><a href="maps.html#cb42-2" tabindex="-1"></a>ggmap<span class="sc">::</span><span class="fu">register_stadiamaps</span>(<span class="at">key =</span> <span class="st">&quot;YOUR KEY&quot;</span>)</span></code></pre></div>
+<p>Then, source your script to register your API key in your work session. Once this is done you can acquire and save a base map.</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="maps.html#cb43-1" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;PATHNAME/stadiakey.R&quot;</span>) <span class="co"># runs the script</span></span>
+<span id="cb43-2"><a href="maps.html#cb43-2" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="maps.html#cb43-3" tabindex="-1"></a><span class="co"># get a map</span></span>
+<span id="cb43-4"><a href="maps.html#cb43-4" tabindex="-1"></a></span>
+<span id="cb43-5"><a href="maps.html#cb43-5" tabindex="-1"></a>long_point <span class="ot">&lt;-</span> <span class="fu">get_stadiamap</span>(<span class="at">bbox=</span><span class="fu">c</span>(<span class="at">left=</span><span class="sc">-</span><span class="fl">83.5</span>,</span>
+<span id="cb43-6"><a href="maps.html#cb43-6" tabindex="-1"></a>                                   <span class="at">right=</span><span class="sc">-</span><span class="dv">79</span>,</span>
+<span id="cb43-7"><a href="maps.html#cb43-7" tabindex="-1"></a>                                   <span class="at">bottom=</span><span class="fl">41.5</span>,</span>
+<span id="cb43-8"><a href="maps.html#cb43-8" tabindex="-1"></a>                                   <span class="at">top=</span><span class="fl">45.5</span>),</span>
+<span id="cb43-9"><a href="maps.html#cb43-9" tabindex="-1"></a>                            <span class="at">maptype =</span> <span class="st">&quot;stamen_terrain_background&quot;</span>,</span>
+<span id="cb43-10"><a href="maps.html#cb43-10" tabindex="-1"></a>                            <span class="at">zoom =</span> <span class="dv">8</span>,</span>
+<span id="cb43-11"><a href="maps.html#cb43-11" tabindex="-1"></a>                            <span class="at">color =</span> <span class="st">&quot;color&quot;</span>)</span>
+<span id="cb43-12"><a href="maps.html#cb43-12" tabindex="-1"></a></span>
+<span id="cb43-13"><a href="maps.html#cb43-13" tabindex="-1"></a><span class="fu">ggmap</span>(long_point) <span class="co"># view before saving</span></span>
+<span id="cb43-14"><a href="maps.html#cb43-14" tabindex="-1"></a></span>
+<span id="cb43-15"><a href="maps.html#cb43-15" tabindex="-1"></a><span class="fu">save</span>(long_point,<span class="at">file=</span><span class="st">&quot;./data/long_point.rda&quot;</span>)</span></code></pre></div>
+<p>Now you’re ready to gather the features.</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="maps.html#cb44-1" tabindex="-1"></a><span class="fu">load</span>(<span class="st">&quot;./data/long_point.rda&quot;</span>) <span class="co"># load previously saved base layer</span></span>
+<span id="cb44-2"><a href="maps.html#cb44-2" tabindex="-1"></a></span>
+<span id="cb44-3"><a href="maps.html#cb44-3" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="maps.html#cb44-4" tabindex="-1"></a><span class="co"># get the Great Lakes shoreline layer</span></span>
+<span id="cb44-5"><a href="maps.html#cb44-5" tabindex="-1"></a>greatLakes <span class="ot">&lt;-</span> <span class="fu">read_sf</span>(<span class="at">dsn=</span><span class="st">&quot;./data/&quot;</span>, </span>
+<span id="cb44-6"><a href="maps.html#cb44-6" tabindex="-1"></a>                      <span class="at">layer=</span><span class="st">&quot;gl_mainlakes_wgs84_rp&quot;</span>)</span>
+<span id="cb44-7"><a href="maps.html#cb44-7" tabindex="-1"></a></span>
+<span id="cb44-8"><a href="maps.html#cb44-8" tabindex="-1"></a><span class="co"># transform into correct crs (coordinte reference system)</span></span>
+<span id="cb44-9"><a href="maps.html#cb44-9" tabindex="-1"></a>greatLakes_4326 <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(greatLakes, <span class="dv">4326</span>) </span></code></pre></div>
+<p>Make the map. This is pretty basic and there is much more you can do!</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="maps.html#cb45-1" tabindex="-1"></a>map <span class="ot">&lt;-</span> <span class="fu">ggmap</span>(long_point)<span class="sc">+</span></span>
+<span id="cb45-2"><a href="maps.html#cb45-2" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> greatLakes_4326,</span>
+<span id="cb45-3"><a href="maps.html#cb45-3" tabindex="-1"></a>          <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">geometry =</span> geometry),</span>
+<span id="cb45-4"><a href="maps.html#cb45-4" tabindex="-1"></a>          <span class="at">color =</span> <span class="st">&quot;darkolivegreen&quot;</span>,</span>
+<span id="cb45-5"><a href="maps.html#cb45-5" tabindex="-1"></a>          <span class="at">fill =</span> <span class="st">&quot;#98B2CD&quot;</span>,</span>
+<span id="cb45-6"><a href="maps.html#cb45-6" tabindex="-1"></a>          <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>)<span class="sc">+</span></span>
+<span id="cb45-7"><a href="maps.html#cb45-7" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">&quot;Latitude&quot;</span>)<span class="sc">+</span></span>
+<span id="cb45-8"><a href="maps.html#cb45-8" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">name=</span><span class="st">&quot;Longitude&quot;</span>,</span>
+<span id="cb45-9"><a href="maps.html#cb45-9" tabindex="-1"></a>                     <span class="at">limits=</span><span class="fu">c</span>(<span class="sc">-</span><span class="fl">83.5</span>,<span class="sc">-</span><span class="dv">79</span>),</span>
+<span id="cb45-10"><a href="maps.html#cb45-10" tabindex="-1"></a>                     <span class="at">expand=</span><span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">0</span>))<span class="sc">+</span></span>
+<span id="cb45-11"><a href="maps.html#cb45-11" tabindex="-1"></a>  <span class="fu">coord_sf</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">83.5</span>, <span class="sc">-</span><span class="dv">79</span>), </span>
+<span id="cb45-12"><a href="maps.html#cb45-12" tabindex="-1"></a>           <span class="at">ylim =</span> <span class="fu">c</span>(<span class="fl">41.5</span>, <span class="fl">45.5</span>), <span class="at">expand =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb45-13"><a href="maps.html#cb45-13" tabindex="-1"></a>  <span class="fu">theme_bw</span>()<span class="sc">+</span></span>
+<span id="cb45-14"><a href="maps.html#cb45-14" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>)<span class="sc">+</span></span>
+<span id="cb45-15"><a href="maps.html#cb45-15" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text=</span><span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">8</span>),</span>
+<span id="cb45-16"><a href="maps.html#cb45-16" tabindex="-1"></a>        <span class="at">text =</span> <span class="fu">element_text</span>(<span class="at">size =</span><span class="dv">8</span>),</span>
+<span id="cb45-17"><a href="maps.html#cb45-17" tabindex="-1"></a>        <span class="at">axis.title=</span><span class="fu">element_text</span>(<span class="at">size=</span><span class="dv">10</span>),</span>
+<span id="cb45-18"><a href="maps.html#cb45-18" tabindex="-1"></a>        <span class="at">strip.text =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">12</span>))<span class="sc">+</span></span>
+<span id="cb45-19"><a href="maps.html#cb45-19" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">&quot;text&quot;</span>, <span class="at">label =</span> <span class="st">&quot;Lake Erie&quot;</span>, <span class="at">fontface=</span><span class="st">&quot;italic&quot;</span>,</span>
+<span id="cb45-20"><a href="maps.html#cb45-20" tabindex="-1"></a>    <span class="at">x =</span> <span class="sc">-</span><span class="fl">81.15</span>, <span class="at">y =</span> <span class="fl">42.2</span>, <span class="at">size =</span> <span class="dv">3</span>)</span>
+<span id="cb45-21"><a href="maps.html#cb45-21" tabindex="-1"></a></span>
+<span id="cb45-22"><a href="maps.html#cb45-22" tabindex="-1"></a>map</span></code></pre></div>
+<p><img src="bookdownproj_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 
 </div>
             </section>
